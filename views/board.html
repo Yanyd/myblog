@@ -1,0 +1,265 @@
+<!--引入页头-->
+{{template "header2" .}}
+
+<!--引入导航条-->
+ {{$flag:=.IsLogin}}
+<div class="body_center">
+{{template "navbar" .}}
+<div class="container bk_color" >
+  <div class="col-md-8 col-md-offset-2">
+    <div class="alert alert-info"  style="margin-top:20px;margin-bottom:30px;">
+      随便写点什么吧 ^_^ .
+    </div>
+    <div id="board">
+      <h4><span class="comment_num">{{.CommentNum}}</span>条留言</h4>
+      <hr id="hr_form"/>
+      <!--留言输入框-->
+      <form id="comment_form" method="POST" action="/comment/add" style="margin-top:24px;margin-bottom:6px;">
+            <input id="hidden_pid" type="hidden" name="pid" value="" />
+            <input type="hidden" name="tid" value="0" />
+            
+            <div class="row">
+               <div class="col-md-6">
+                  <div class="form-group">
+                    <div class="input-group">
+                    <span class="input-group-addon">显示昵称</span>
+                    <input type="text" name="nickname" class="form-control" maxlength="20" placeholder="来者何人,报上名来.">
+                    </div>
+                  </div>    
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <div class="input-group">
+                  <span class="input-group-addon">Email</span>
+                  <input type="text" name="email" class="form-control" maxlength="50" placeholder="请输入您的邮箱,不会在评论中显示哦.">
+                  <div class="input-group-btn">
+                    <button type="button" class="btn btn-default form_btn"><span class="caret"></span></button>
+                  </div>
+                  </div>
+                </div>
+              </div>
+            </div><!--row end-->
+          <div class="row hidden" id="form_bottom">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="control-label">写点什么:</label>
+                  <textarea name="content" id="" cols="30" rows="7" class="form-control" maxlength="300" placeholder="写什么好呢."></textarea>
+                </div>
+              </div>
+                <div class="col-md-6" style="margin-top:133px;">
+                  <a id="submit_btn" class="btn btn-default">留个足迹</a>　　　
+                  <a id="cancle_btn"  class="btn btn-default" style="display:none;">取　　消</a>
+                </div>
+          </div><!--row end-->
+        </form>
+      <hr/>
+      <div id="comment_div">
+        {{range .Page.PageContent}}
+                <div class="media page_div" id="comment_{{.Id}}" style="margin-top:22px;margin-bottom:8px;">
+                  <a class="pull-left" href="###">
+                    <img class="media-object img-thumbnail msg_img" src="/static/img/avatar/1.jpg" width="60" height="60" alt="">
+                  </a>
+                  <div class="media-body" id="reply_body_{{.Id}}">
+                    <h4 class="media-heading">{{.Nickname}} ·
+                        <small> {{date .Created "Y-m-d H:i:s"}}　# {{.Floor}} 楼 </small>
+                        <small>　<a id="reply_{{.Id}}" href="###">回 复</a>　</small>
+                        <small>
+                          {{if $flag}}
+                          <a href="###" onclick="delComment({{.Id}},0);">删 除</a>
+                          {{end}}
+                        </small>
+                    </h4>
+                    <div id="reply_content_{{.Id}}">{{.Content}}</div>
+                  </div>
+                </div>
+          {{end}}
+      </div>
+    </div>
+    {{if  gt .Page.TotalPageNum 1}}
+      <ul id="pagination" class="pagination pagination-lg">
+      </ul>
+    {{end}}
+  </div>
+</div>
+<div class="FooterPush"></div>
+</div>
+<!--回复结点 作为模板-->
+     <div class="media page_div" id="comment_clone" style="margin-top:22px;margin-bottom:8px;display:none;">
+       <a class="pull-left" href="###">
+         <img class="media-object img-thumbnail msg_img" src="/static/img/avatar/1.jpg" width="60" height="60" alt="">
+       </a>
+       <div class="media-body" id="">
+         <h4 class="media-heading"><span class="nickname">nickname</span> ·
+             <small> <span class="created">created</span></small>
+             <small>　<a class="reply" id="" href="###">回 复</a>　</small>
+             <small>
+               {{if $flag}}
+               <a href="###" class="del" >删 除</a>
+               {{end}}
+             </small>
+         </h4>
+         <div id=""></div>
+       </div>
+     </div>
+<!--回复结点结束-->
+
+{{template "footer2" .}}
+<!-- 分页的js脚本-->
+{{if  gt .Page.TotalPageNum 1}}
+  {{template "pagination" .}}
+{{end}}
+<script>
+  
+  $(function(){
+
+     //添加回复加点击事件
+    {{range .Page.PageContent}}
+      $("#reply_{{.Id}}").click(function() {
+        $("#reply_content_{{.Id}}").after($('#comment_form'));
+        $("#cancle_btn").show();
+        $("#hidden_pid").val({{.Id}});
+      });
+
+      //回复显示在相应的位置
+      if(0!={{.Pid}}){
+        $("#comment_{{.Id}}").appendTo('#reply_body_{{.Pid}}');
+      }
+    {{end}}
+
+  /** 表单显示/隐藏设置 start **/
+  $(".form_btn").click(function(event) {
+     if($('#form_bottom').hasClass('hidden')){
+       $('#form_bottom').removeClass('hidden');
+     }else{
+       $('#form_bottom').addClass('hidden');
+     }
+  });
+  $('input[name=nickname],input[name=email]').focus(function(event) {
+       $('#form_bottom').removeClass('hidden');
+  });
+
+  /** 表单显示/隐藏设置 end **/
+
+  $("#cancle_btn").click(commentFormBack);
+
+  //提交评论
+  $("#submit_btn").click(function() {
+    var nickname=$.trim($("input[name=nickname]").val())
+    var email=$.trim($("input[name=email]").val())
+    var content=$.trim($("textarea[name=content]").val())
+    var tid=$("input[name=tid]").val();
+    var pid=$("input[name=pid]").val();
+    if (0<nickname.length&&0<content.length&&0<email.length&&validEmail(email)){
+      $.post("/comment/add", $("#comment_form").serialize(),
+       function(data){
+
+        var cmtObj=eval("("+data+")"); 
+        if(($('#comment_div >.page_div').length=={{.Page.PageSize}})&&(0==pid)){
+           $(window)[0].location.href="/board?pageNow="+cmtObj.totalPageNum;
+        }
+        
+         //添加回复结点
+         var cloneObj=$("#comment_clone").clone();
+         if(pid.length>0){
+           $(cloneObj).appendTo("#reply_body_"+pid);
+         }else{
+           $(cloneObj).appendTo('#comment_div');
+         }
+
+         $(cloneObj).attr({ "id": "comment_"+cmtObj.id});
+
+         var num=Math.floor(Math.random()*10+1);
+         $("#comment_"+cmtObj.id+" .msg_img").attr({'src': '/static/img/avatar/'+num+'.jpg'});
+
+         $("#comment_"+cmtObj.id+" .media-body").attr({ "id": "reply_body_"+cmtObj.id});
+         $("#reply_body_"+cmtObj.id+" .nickname").html(nickname);
+         $("#reply_body_"+cmtObj.id+" .created").html(cmtObj.created+"　# "+cmtObj.floor+" 楼 ");
+         $("#reply_body_"+cmtObj.id+" .reply").attr({ "id": "reply_"+cmtObj.id});
+         //$("#reply_body_"+cmtObj.id+" .del").click(delComment(cmtObj.id,tid));
+         $("#reply_body_"+cmtObj.id+" .del").click(function() {
+            delComment(cmtObj.id,tid);
+         });
+         $("#reply_body_"+cmtObj.id+" div").attr({ "id":"reply_content_"+cmtObj.id});
+         $("#reply_content_"+cmtObj.id).html(content);
+         
+         $("#reply_"+cmtObj.id).click(function() {
+           $("#reply_content_"+cmtObj.id).after($('#comment_form'));
+           $("#cancle_btn").show();
+           $("#hidden_pid").val(cmtObj.id)
+         });
+         $("#comment_"+cmtObj.id).show();
+         $('.comment_num').html(cmtObj.count);
+         commentFormBack();
+
+       });
+
+    }else{
+
+      if (0==nickname.length) {
+        $("input[name=nickname]").val("");
+        $("input[name=nickname]").attr('placeholder', '起个有个性的昵称吧.');
+      }       
+      if (0==email.length) {
+        $("input[name=email]").val("");
+        $("input[name=email]").attr('placeholder', '留个email呗.');
+      }else if(!validEmail(email)){
+        $("input[name=email]").val("");
+        $("input[name=email]").attr('placeholder', 'Email地址非法.');
+      } 
+      if (0==content.length){
+        $("textarea[name=content]").val("");
+        $("textarea[name=content]").attr('placeholder', '写点什么吧.');
+      }    
+    }
+  });
+  //表单提交完
+
+      //修饰图片随机显示 start
+      $(".msg_img").each(function(index, el) {
+           var num=Math.floor(Math.random()*10+1);
+           $(el).attr({'src': '/static/img/avatar/'+num+'.jpg'});
+      });    
+      //修饰图片随机显示 end
+
+  })
+  //评论框复原
+  function commentFormBack() {
+    $("#comment_form").insertAfter('#hr_form');
+    $("#cancle_btn").hide();
+    $("#cancle_btn").css({"background-color":"#fff"});
+    $("#comment_form")[0].reset();
+    $("#hidden_pid").val("");
+    $('#form_bottom').addClass('hidden');
+  }
+
+
+  //删除评论
+  function delComment(id,tid){
+    if(confirm("确认删除吗?")){
+      $.post("/comment/del/"+id+"/"+tid, function(data){
+          //只考虑最后一页恰好全部删除的情况即可
+           $("#comment_"+id).remove();
+          //放到这里是为了体验更好
+          //更新分页?
+          var pageNow={{.Page.PageNow}};
+          if(0==$('#comment_div > .page_div').length){
+              $('#pagination').addClass('hidden');
+              pageNow-=1;
+          }
+          var num=parseInt($('.comment_num').html());
+          //多个子节点?
+          $('.comment_num').html(num-$.parseJSON(data).delNum);
+          //重新查询数据库，取得最新的总共页数
+          var totalPageNum=$.parseJSON(data).totalPageNum;
+          $(window)[0].location.href="/board?pageNow="+pageNow;
+      });
+    }
+  }
+  //验证邮件
+  function validEmail(email) {
+      var patten = new RegExp(/^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]+$/);
+      return patten.test(email);
+  }
+
+</script>
+</html>

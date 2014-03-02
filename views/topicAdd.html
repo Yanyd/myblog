@@ -1,0 +1,60 @@
+<!--引入页头-->
+{{template "header2" .}}
+
+<div class="body_center">
+<!--引入导航条-->
+{{template "navbar" .}}
+
+<div class="container bk_color" style="padding-top:20px;padding-bottom:20px;">
+  <form method="POST" action="/topic" enctype="multipart/form-data" id="topic_form">
+      <input id="hidden_id" type="hidden" name="id" value="0">
+      <div class="form-group">
+        <div class="input-group">
+          <span class="input-group-addon">博客标题</span>
+          <input type="text" class="form-control" placeholder="请输入博客标题." name="title" maxlength="100"   required >
+        </div>
+      </div>
+
+
+    <div class="form-group">
+      <label >博客分类:</label>
+      {{range .Categories}}
+      <label class="checkbox-inline">
+        <input type="checkbox"  value="{{.Id}}" name="cid"/>
+        {{.Title}}
+      </label>
+      {{end}}
+    </div>
+
+    <div class="form-group">
+        <div class="input-group">
+          <span class="input-group-addon">博客标签</span>
+          <input type="text" class="form-control" placeholder="请输入博客标签，多个标签用逗号分隔开(请在英文状态下输入逗号)。" name="label" maxlength="200">
+        </div>
+    </div>
+
+    <div class="form-group">
+      <label >博客内容:　　　　　　　　<span class="save_info hidden" style="color:red;font-size:14px;"></span></label>
+      <textarea id="editor_id" name="content" cols="30" rows="15" class="form-control" placeholder="写点什么吧." maxlength="5000"  required ></textarea>
+    </div>
+
+    <div class="form-group">
+      <div class="input-group">
+        <span class="input-group-addon">博客附件</span>
+        <input type="file" class="form-control" name="attachment" />
+      </div>
+    </div>
+
+    <a id="form_add_btn" class="btn btn-success">发布</a>
+    　　　<a id="form_draft_btn"  class="btn btn-primary draft">保存草稿</a>
+    　　　<a id="form_cnl_btn"  class="btn btn-danger">取消</a>
+  </form>
+</div>
+  <div class="FooterPush"></div>
+</div>
+
+{{template "footer2" .  }}
+{{template "jstool" .   }}
+{{template "autosave" . }}
+
+</html>

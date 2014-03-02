@@ -1,0 +1,89 @@
+<!--引入页头-->
+{{template "header2" .}}
+
+<!--引入导航条-->
+ {{$flag:=.IsLogin}}
+<div class="body_center">
+{{template "navbar" .}}
+<div class="container bk_color" >
+  <div class="col-md-8 col-md-offset-2">
+    <div class="alert alert-info"  style="margin-top:20px;margin-bottom:30px;">
+      Todo 列表 
+    </div>
+    <div id="todo">
+      <!--todo输入框-->
+      <form id="todo_form" method="POST" action="/todo" style="margin-top:24px;margin-bottom:6px;">
+          <div class="form-group">
+            <div class="input-group">
+              <span class="input-group-addon">Todo</span>
+              <input type="text" name="content" class="form-control" maxlength="1000" placeholder="做点什么?">
+              <span class="input-group-btn">
+                <a id="todo_form_btn" class="btn btn-default">添加</a>
+              </span>
+            </div>
+          </div>    
+      </form>
+      <hr/>
+      {{range  .Todos}}
+         <input id="{{.Id}}" type="checkbox" {{if .Done}} checked {{end}}> <span class="todo_{{.Id}}">
+         {{if .Done}}<del>{{.Content}}</del>{{else}} {{.Content}} {{end}}</span>
+         <br/>
+      {{end}}
+    </div>
+  </div>
+</div>
+<div class="FooterPush"></div>
+</div>
+
+{{template "footer2" .}}
+<script>
+  $(function(){
+    $('#todo_form_btn').click(function(event) {
+      //verifyForm();
+      postForm();
+    });
+    $('#unsafeName').keydown(function(event) {
+      var e=event || window.event || arguments.callee.caller.arguments[0];
+      if(e&&13===e.keyCode){
+         //verifyForm();
+         postForm();
+      }
+    });
+
+    //checkbox 点击事件
+    $('input[type=checkbox]').click(function(event) {
+      var id= $(this)[0].id;
+      if($(this)[0].checked){
+        $.post('/todo/updStatus/'+id, function(data) {
+          var obj=$.parseJSON(data)
+          if(obj.ok){
+            var htmlStr=$('.todo_'+id).html();
+            $('.todo_'+id).html('<del>'+htmlStr+'</del>');
+          }
+        });
+      }else{
+        $.post('/todo/updStatus/'+id, function(data) {
+          var obj=$.parseJSON(data)
+          if(obj.ok){
+            var htmlStr=$('.todo_'+id).children('del').html();
+            $('.todo_'+id).html(htmlStr);
+          }
+        });
+      }
+    });
+    
+  });
+
+  function postForm(){
+    var content=$('input[name=content]').val();
+    $.post('/todo', $('#todo_form').serialize(), function(data, textStatus, xhr) {
+      var obj=$.parseJSON(data);
+      if(obj.ok){
+        $('<input id="'+obj.id+'" type="checkbox"> '+content+'<br/>').appendTo('#todo');
+        $('#todo_form')[0].reset();
+      }
+    });
+  }
+</script>
+
+</html>

@@ -1,0 +1,156 @@
+<!--添加一个(.)表示这是一个动态模板,需要传递数据,进行逻辑操作-->
+<!--在 Go1.2 中不添加也可以-->
+
+<!--引入页头-->
+{{template "header2" .}}
+
+<!--引入导航条-->
+<div class="body_center" style="margin-bottom:20px;">
+{{template "navbar" .}}
+<div class="container">
+  <div class="col-md-8" style="padding-top:40px;padding-bottom:20px;background-color:#fff;" >
+    {{range .Page.PageContent}}
+   <!--  <div class="page-header index_topic" style="padding:16px 16px;">   -->
+        <div class="media index_topic" style="height:240px;margin:0px;padding:20px 10px 20px 15px;position:relative;">
+          <a class="pull-left" href="###">
+            <img class="media-object img-thumbnail index_img" src="/static/img/show.jpg" style="width:260px;height:200px;margin-right:20px;" alt="">
+          </a>
+          <div class="media-body" >
+            <h5 class="media-heading" style="height:25px;overflow:hidden;">
+              <a onclick="upvote({{.Id}});"  rel="tooltip" data-placement="bottom" data-original-title="upvote" style="text-decoration:none;cursor:pointer;"><i class="glyphicon glyphicon-thumbs-up"></i></a> <span id="upvote_{{.Id}}">{{.Upvote}}</span>　<a href="/topic/view/{{.Id}}" style="font-size:20px;line-height:25px;font-weight:normal;color:#333333;text-decoration:none;" title="{{.Title}}">{{.Title}}</a>
+            </h5>
+            <div id="{{.Id}}" style="margin-top:14px;line-height:24px;height:120px;overflow:hidden;">　　{{.Content}} ...</div>
+          </div>
+          <div class="text-muted" style="position:absolute;bottom:20px;left:306px;">
+                <i class="glyphicon glyphicon-user"></i> admin&nbsp;&nbsp;
+                <i class="glyphicon glyphicon-time"></i> {{date .Created "Y-m-d"}}&nbsp;&nbsp;
+                <i class="glyphicon glyphicon-eye-open"></i> {{.Views}} 浏览&nbsp;&nbsp;
+                <i class="glyphicon glyphicon-comment "></i> <a href="/topic/view/{{.Id}}/#comment" style="color:#45b0ee;">{{.ReplyCount}}评论</a>&nbsp;&nbsp;
+                {{if .IsFile}}<img src="/static/img/fileAttach.gif" title="附件" alt="" /> {{end}}
+                {{if .IsImage}}<img src="/static/img/imageAttach.gif" title="图片" alt="" />{{end}}
+                <a href="/topic/view/{{.Id}}" style="color:#45b0ee;">阅读全文»</a>
+          </div>
+        </div>
+        <hr style="border:0;background-color:#d7d7d7;height:1px;margin:0;">
+    <!-- </div> --><!-- Page header -->
+    {{end}}
+
+     <!-- 首页分页 -->
+    {{if  gt .Page.TotalPageNum 1}}
+    <ul class="pager">
+      <li {{if .Page.PrevPage}} class="previous" {{else}} class="previous disabled" {{end}}>
+        <a {{if .Page.PrevPage}} href="/?pageNow={{.Page.PageNow | sub}}&id={{.IndexMap.id}}&label={{.InexMap.Label}}" {{end}}>&larr; 上一页</a></li>
+      <li><a href="###">{{.Page.PageNow}}/{{.Page.TotalPageNum}}</a></li>
+      <li {{if .Page.NextPage}} class="next" {{else}}class="next disabled" {{end}}>
+        <a {{if .Page.NextPage}} href="/?pageNow={{.Page.PageNow | add}}&id={{.IndexMap.id}}&label={{.InexMap.Label}}" {{end}}>下一页 &rarr;</a></li>
+    </ul>
+    {{end}}
+  </div>
+  
+  {{template "right" .}}
+</div>
+<div class="FooterPush"></div>
+</div>
+
+{{template "footer2" .}}
+
+<!-- 最新评论模板 start -->
+<a href="###" class="list-group-item new_cmt hidden">
+  <h5 class="list-group-item-heading" style="height:34px;overflow:hidden;line-height:18px;"><span style="color:#45b0ee;" class="cmt_nickname"></span> 评论 <span style="color:#999966;" class="cmt_title">123</span></h5>
+  <p class="list-group-item-text" style="height:34px;overflow:hidden;"><span></span></p>
+</a>
+<!-- 最新评论模板 end -->
+
+<script>
+    $(function(){
+        getNewComment();
+
+        //鼠标移入和移出文章内容区域的样式 start
+        $(".index_topic").hover(function() {
+          $(this).css({
+            "background-color": '#F8FCFE',
+            'border-left-width': '3px',
+            'border-left-color': '#428BCA',
+            'border-left-style':'solid'
+          });
+        }, function() {
+          $(this).css({
+            'background-color': '#fff',
+            'border-left-width': '',
+            'border-left-color': '',
+            'border-left-style':''
+          });
+        });
+        //鼠标移入和移出文章内容区域的样式 start
+        
+        //七彩标签云 start
+        var colors=new Array("#428bd1","#FFCC66","#FF9999","#FF6666","#CCFF99","#CC9966","#99CC66","#999933","#9933FF","#669933","#009999","#336699");
+        $("#tagsList a").each(function(index, el) {
+             var num=Math.floor(Math.random()*colors.length);
+             $(el).css({'color': colors[num]}); 
+        });
+        //七彩标签云 end
+
+        //修饰图片随机显示 start
+        $(".index_img").each(function(index, el) {
+             var num=Math.floor(Math.random()*10+1);
+             $(el).attr({'src': '/static/img/indexImg/index_'+num+'.jpg'});
+        });    
+        //修饰图片随机显示 end 
+    });
+    //使用Ajax进行投票
+    function upvote(id){
+        $.get("/topic/upvote/"+id, function(data){
+            if(data.length>0){
+              //转成JSON对象
+              var upvote=eval("("+data+")"); 
+              $("#upvote_"+id).html(upvote.num);
+            }
+        });
+    }
+    //获取最新评论
+    function getNewComment(){
+     $.post("/comment/getNew", function(data){
+          if(data.length>0){
+            //转成JSON对象
+            var comment=eval("("+data+")").comments; 
+            $("#cmt_list").empty();
+            $(comment).each(function(index, cmt) {
+                var cloneObj=$(".new_cmt").clone();
+                $(cloneObj).appendTo('#cmt_list');
+                $(cloneObj).children('h5').children('.cmt_nickname').html(cmt.nickname);
+                $(cloneObj).children('h5').children('.cmt_title').html(cmt.title);
+                $(cloneObj).children('p').children('span').html(cmt.content)
+                $(cloneObj).removeClass('new_cmt');
+                $(cloneObj).removeClass('hidden');
+                $(cloneObj).children('h5').children('.cmt_title').click(function(event) {
+                   $(window)[0].location.href='/topic/view/'+cmt.tid;
+                });
+                $(cloneObj).children('h5').children('.cmt_title').hover(function() {
+                  $(this).css('cursor', 'pointer');
+                }, function() {
+                });      
+
+                $(cloneObj).children('p').children('span').click(function(event) {
+                   $(window)[0].location.href='/topic/view/'+cmt.tid+'/#comment';
+                });
+                $(cloneObj).children('p').children('span').hover(function() {
+                  $(this).css('cursor', 'pointer');
+                }, function() {
+                }); 
+            });
+            //去掉样式
+            
+             $('#cmt_list a').hover(function() {
+                 $(this).css({"background-color": '#C2ECA7','cursor':'default'});
+               }, function() {
+                 $(this).css({"background-color": '#fff'});
+               });
+          }
+     });
+    }
+
+</script>
+<script type="text/javascript" src="/static/js/tags.js"></script>
+
+</html>

@@ -1,0 +1,44 @@
+<!--引入页头-->
+{{template "header2" .}}
+<div class="body_center">
+<div class="container bk_color">
+<div class="container" style="width:300px;margin-top:100px;">
+  <a href="/"><img src="/static/img/fontLogo.png" alt=""></a>
+  {{if .HasError }}
+  <div class="alert alert-danger alert-dismissable" align="center">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    {{.Error}}
+  </div>
+  {{end}}
+<form method="POST" action="/login" style="margin-top:4px;">
+  <div class="form-group">
+      <input type="text" class="form-control input-lg" id="unsafeAccount" placeholder="用户名" name="account" maxlength="30" required>
+  </div>
+  <div class="form-group">
+      <input type="password" class="form-control input-lg" id="unsafePwd" placeholder="密　码" name="pwd" maxlength="30" required>
+  </div>
+
+  <div class="form-group">
+      <input type="submit" class="btn btn-primary btn-lg btn-block" value="登录" />　　
+  </div>
+  <div class="checkbox">
+    <label>
+      <input type="checkbox" name="autoLogin" value="1" checked> 下次自动登录
+    </label>
+    <label>
+      <a href="/" class="pull-right" style="text-decoration:none;">忘记密码?</a>
+    </label>
+  </div>
+</form>
+</div>
+</div>
+<div class="FooterPush"></div>
+</div>
+{{template "footer2" .}}
+<script>
+  $(function(){
+    $('body').css({'background-color': '#fff'});
+  })
+</script>
+
+</html>

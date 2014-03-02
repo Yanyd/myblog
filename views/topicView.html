@@ -1,0 +1,202 @@
+<!--引入页头-->
+{{template "header2" .}}
+
+<div class="body_center">
+<!--引入导航条-->
+{{template "navbar" .}}
+ <div class="container bk_color">
+<div>
+  <h2>
+    {{.Topic.Title}}　{{if .IsLogin}}
+    <a href="/topic/update/{{.Topic.Id}}" class="btn btn-danger">修改文章</a>
+    {{end}}
+  </h2>
+  <h5> <i class="glyphicon glyphicon-bookmark"></i>
+    文章分类:　{{range $key,$val:=.Ctgs}}
+    <a href="/?id={{$key}}" class="btn btn-default btn-xs" >{{$val}}</a>
+    {{end}}
+  </h5>
+  <h5> <i class="glyphicon glyphicon-tags"></i>
+    文章标签:　{{range .Labels}}
+    <a href="/?label={{.}}" class="btn btn-default btn-xs" >{{.}}</a>
+    {{end}}
+  </h5>  
+  <div class="panel panel-default">
+      <div class="panel-body">
+        {{str2html .Topic.Content}}
+      </div>
+  </div>
+   {{if .HaveAttach}}
+     {{if .Topic.IsFile}}
+   <h5>附件: {{.Topic.Attachment}} <a href="/attachment/{{.Topic.Attachment}}"> <i class="glyphicon glyphicon-download"></i> </a></h5>
+   {{else}}
+   <img src="/attachment/{{.Topic.Attachment}}" alt="" title="{{.Topic.Attachment}}" class="img-thumbnail" width="450" height="450"> 
+   {{end}}
+   {{end}}
+</div><!--container end-->
+<a name="comment"></a>
+<hr/>
+{{$id:=.Topic.Id}}
+  {{$flag:=.IsLogin}}
+<div id="comment_div">
+  {{range .Comments}}
+          <div class="media" id="comment_{{.Id}}" style="margin-top:30px;">
+            <a class="pull-left" href="###">
+              <img class="media-object img-thumbnail cmt_img" src="/static/img/avatar/2.jpg" width="60" hegiht="60" alt="">
+            </a>
+            <div class="media-body" id="reply_body_{{.Id}}">
+              <h4 class="media-heading">{{.Nickname}} ·
+                  <small> {{date .Created "Y-m-d H:i:s"}}　# {{.Floor}} 楼 </small>
+                  <small>　<a id="reply_{{.Id}}" href="###">回 复</a>　</small>
+                  <small>
+                    {{if $flag}}
+                    <a href="###" onclick="delComment({{.Id}},{{$id}});">删 除</a>
+                    {{end}}
+                  </small>
+              </h4>
+              <div id="reply_content_{{.Id}}">{{.Content}}</div>
+            </div>
+          </div>
+    {{end}}
+  <h3>评论本文</h3><hr/>
+  {{template "comment_form" .}}
+</div>
+</div>
+<div class="FooterPush"></div>
+</div>
+<!--回复结点 作为模板-->
+     <div class="media" id="comment_clone" style="margin-top:30px;display:none;">
+       <a class="pull-left" href="###">
+         <img class="media-object img-thumbnail cmt_img" src="/static/img/avatar/2.jpg" width="60" hegiht="60" alt="">
+       </a>
+       <div class="media-body" id="">
+         <h4 class="media-heading"><span class="nickname">nickname</span> ·
+             <small> <span class="created">created</span></small>
+             <small>　<a class="reply" id="" href="###">回 复</a>　</small>
+             <small>
+               {{if $flag}}
+               <a href="###" class="del" >删 除</a>
+               {{end}}
+             </small>
+         </h4>
+         <div id=""></div>
+       </div>
+     </div>
+<!--回复结点结束-->
+
+{{template "footer2" .}}
+
+<script>
+  $(function(){
+
+ //添加回复加点击事件
+{{range .Comments}}
+ 
+  $("#reply_{{.Id}}").click(function() {
+    $("#reply_content_{{.Id}}").after($('#comment_form'));
+    $("#cancle_btn").show();
+    $("#hidden_pid").val({{.Id}})
+  });
+
+  //回复显示在相应的位置
+  if(0!={{.Pid}}){
+    $("#comment_{{.Id}}").appendTo('#reply_body_{{.Pid}}');
+  }
+
+{{end}}
+
+
+  $("#cancle_btn").click(commentFormBack);
+  function commentFormBack() {
+    $("#comment_form").appendTo('#comment_div');
+    $("#cancle_btn").hide();
+    $("#cancle_btn").css({"background-color":"#fff"});
+    $("#comment_form")[0].reset();
+    $("#hidden_pid").val("");
+
+  }
+  //提交评论
+  $("#submit_btn").click(function() {
+    var nickname=$.trim($("input[name=nickname]").val())
+    var email=$.trim($("input[name=email]").val())
+    var content=$.trim($("textarea[name=content]").val())
+    var tid=$("input[name=tid]").val();
+    var pid=$("input[name=pid]").val();
+    if (0<nickname.length&&0<content.length&&0<email.length&&validEmail(email)){
+      $.post("/comment/add", $("#comment_form").serialize(),
+       function(data){
+        var cmtObj=eval("("+data+")"); 
+         //添加回复结点
+         var cloneObj=$("#comment_clone").clone();
+         if(pid.length>0){
+           $(cloneObj).appendTo("#reply_body_"+pid);
+         }else{
+           $("#comment_div h3").before($(cloneObj));
+         }
+
+         $(cloneObj).attr({ "id": "comment_"+cmtObj.id});
+         $("#comment_"+cmtObj.id+" .media-body").attr({ "id": "reply_body_"+cmtObj.id});
+         $("#reply_body_"+cmtObj.id+" .nickname").html(nickname);
+         $("#reply_body_"+cmtObj.id+" .created").html(cmtObj.created+"　# "+cmtObj.floor+" 楼 ");
+         $("#reply_body_"+cmtObj.id+" .reply").attr({ "id": "reply_"+cmtObj.id});
+         //$("#reply_body_"+cmtObj.id+" .del").click(delComment(cmtObj.id,tid));
+         $("#reply_body_"+cmtObj.id+" .del").click(function() {
+            delComment(cmtObj.id,tid);
+         });
+         $("#reply_body_"+cmtObj.id+" div").attr({ "id":"reply_content_"+cmtObj.id});
+         $("#reply_content_"+cmtObj.id).html(content);
+         
+         $("#reply_"+cmtObj.id).click(function() {
+           $("#reply_content_"+cmtObj.id).after($('#comment_form'));
+           $("#cancle_btn").show();
+           $("#hidden_pid").val(cmtObj.id)
+         });
+         $("#comment_"+cmtObj.id).show();
+         commentFormBack();
+       });
+
+    }else{
+
+      if (0==nickname.length) {
+        $("input[name=nickname]").val("");
+        $("input[name=nickname]").attr('placeholder', '起个有个性的昵称吧.');
+      }       
+      if (0==email.length) {
+        $("input[name=email]").val("");
+        $("input[name=email]").attr('placeholder', '留个email呗.');
+      }else if(!validEmail(email)){
+        $("input[name=email]").val("");
+        $("input[name=email]").attr('placeholder', 'Email地址非法.');
+      } 
+      if (0==content.length){
+        $("textarea[name=content]").val("");
+        $("textarea[name=content]").attr('placeholder', '写点什么吧.');
+      }    
+    }
+  });
+  //表单提交完
+
+  //修饰图片随机显示 start
+  $(".cmt_img").each(function(index, el) {
+       var num=Math.floor(Math.random()*10+1);
+       $(el).attr({'src': '/static/img/avatar/'+num+'.jpg'});
+  });    
+  //修饰图片随机显示 end
+
+  })
+  //删除评论
+  function delComment(id,tid){
+    if(confirm("确认删除吗?")){
+      $.get("/comment/del/"+id+"/"+tid, function(){
+          $("#comment_"+id).remove();
+      });
+    }
+  }
+  //验证邮件
+  function validEmail(email) {
+      var patten = new RegExp(/^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]+$/);
+      return patten.test(email);
+  }
+
+</script>
+</html>

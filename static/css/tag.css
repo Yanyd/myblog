@@ -1,0 +1,97 @@
+a:focus { outline: none; }  /*去掉bootstrap 点击 <a> 时，出现的边框*/
+#tagsList {position:relative; width:250px; height:250px; margin-top: 20px;}
+#tagsList a {position:absolute; top:0px; left:0px; font-family: Microsoft YaHei; font-weight:bold; text-decoration:none; padding: 3px 6px; }
+#tagsList a:hover { letter-spacing:2px;border:1px solid red;}
+
+/* 导航栏样式 start */
+.navbar-nav{
+	font-size: 15px;
+}
+
+/* 导航栏样式 end */
+
+/*  页脚样式 start */
+/*  .icon-bow{
+	  display:block;
+	  width:32px;
+	  height:21px;
+	  background:#fff url(/static/img/bow.png) no-repeat 50% 50%;
+	  margin:-30px auto 0px;
+	  padding:0 26px;
+} */
+
+/*  #footer span{
+	   display:block;
+	   width:320px;
+	   margin:0 auto;
+	   padding:0;
+} */
+/* 页脚样式 end  */
+
+ #carousel1 img{
+ 	width:100%;
+ 	height:350px;
+ }
+
+
+#archive a{
+  color: #222222;
+  border:1px solid #e5e5e5;
+  border-bottom:none;
+} 
+
+#archive  .active{
+  border-left: 3px solid #dd4b39;
+} 
+
+#archive  .active a{
+  color:#dd4b39;
+  font-weight:bold;
+  text-shadow:none;
+}
+#archive  i{
+	color: #222222;
+}
+
+.ctg_section h3, .label_section h3, .comment_section h3{
+	margin-top:32px;
+	border-bottom: 1px solid #E7E7E7;
+	font-size:18px;
+	line-height: 20px;
+	padding:6px 0;
+	font-weight:normal;
+}
+
+/* 设置相册图片样式start */
+.photo_wrap ul {
+	list-style-type:none;
+	margin:0;
+	padding:0; 
+}
+.photo_wrap li {
+	float:left;
+	position: relative;
+	overflow: hidden;
+	margin:20px;
+}
+.photo_wrap img {
+    width:340px;
+	border:none;
+	position: relative;
+}
+.photo_wrap .caption{
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width:100%;
+	display: none;
+	background:#0c4b62;
+	color: white;
+	opacity: 0.9;
+}
+.photo_wrap .caption .caption_inside{
+	padding:4px 0px 2px 6px;
+	margin:0px;
+	text-align: left;
+}
+/* 设置相册图片样式end */

@@ -1,0 +1,97 @@
+<!--引入页头-->
+{{template "header2" .}}
+
+<!--引入导航条-->
+ <div class="body_center">
+{{template "navbar" .}}
+  <div class="container bk_color">
+  <h2><a href="###" id="list_btn" class="btn btn-primary">分类列表</a></h2>
+  {{if .IsLogin}}
+  <form id="ctg_form" method="GET" action="/category">
+    <div class="form-group">
+      <div class="input-group">
+        <span class="input-group-addon">分类名称</span>
+        <input type="text" class="form-control" id="unsafeName" placeholder="请输入分类名称." name="name" maxlength="20" required>
+        <span class="input-group-btn">
+          <a id="ctg_form_btn" class="btn btn-default">添加</a>
+        </span>
+      </div>
+    </div>
+    <input type="hidden" name="op" value="add" />
+  </form>
+  {{end}}
+  {{$flag:=.IsLogin}}
+  <table class="table table-hover">
+      <thead>
+        <tr>
+            <th>#</th>
+            <th>名称</th>
+            <th>文章数</th>
+            {{if .IsLogin}}<th>操作</th>{{end}}
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Page.PageContent}}
+        <tr>
+            <td>{{.Id}}</td>
+            <td>{{.Title}}</td>
+            <td>{{.TopicCount}}</td>
+            {{if $flag}}<td><a href="javascript:if(confirm('确认删除吗?'))window.location='/category?op=del&cid={{.Id}}'">删除</a></td>{{end}}
+        </tr>
+        {{end}}
+      </tbody>
+  </table>
+  {{if  gt .Page.TotalPageNum 1}}
+  <ul id="pagination" class="pagination pagination-lg">
+  </ul>
+  {{end}}
+  </div>
+  <div class="FooterPush"></div>
+  </div>
+    {{template "footer2" .}}
+    <!-- 引入分页js -->
+    {{if  gt .Page.TotalPageNum 1}}
+      {{template "pagination" .}}
+    {{end}}
+    <!-- js工具 -->
+    {{template "jstool" .}}
+    <script>
+
+        var ctgNames=new Array();
+        //存储分类名称
+        {{range .AllCtg}}
+            ctgNames.push({{.Title}});
+        {{end}}
+
+        $(function(){
+          $('#ctg_form_btn').click(function(event) {
+            verifyForm();
+          });
+          $('#unsafeName').keydown(function(event) {
+            var e=event || window.event || arguments.callee.caller.arguments[0];
+            if(e&&13===e.keyCode){
+               verifyForm();
+            }
+          });
+          
+        });
+
+        function verifyForm(){
+          var unsafeName=$.trim($('#unsafeName').val());
+          //不能为空 且 不能重复
+          var isExist=($.inArray(unsafeName, ctgNames) < 0 ? false:true);
+          if( notEmpty(unsafeName) && !isExist ){
+                $('#ctg_form')[0].submit();
+          }else{
+            $('#unsafeName').val('');
+            $('#unsafeName')[0].blur();
+            if( isExist ){
+                $('#unsafeName').attr('placeholder','分类名称已经存在.');
+            }else{
+                $('#unsafeName').attr('placeholder','分类名称不能为空.');
+            }
+          }
+        }
+
+    </script>
+</html>

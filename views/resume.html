@@ -1,0 +1,147 @@
+{{template "header2" .}}
+
+<div class="body_center">
+{{template "navbar" .}}
+<div class="container bk_color" style="padding-top:20px;">
+  {{ $isLogin:=.IsLogin }}
+  {{if .IsLogin}}
+  <div class="pull-right">
+    <a class="btn btn-primary" href="/resume/add">添加简历</a>  
+    
+    {{ $isFile:=compare .WordFile.Color "WordFile"}}
+
+    <a id="up_resume" {{if $isFile}} class="btn btn-primary hide" {{else}} class="btn btn-primary"  {{end}}>上传简历</a> 
+    
+    <h5  id="word" style="width:180px;" {{if not $isFile}}  class="hide" {{end}}>简历文件: <span id="word_name">{{.WordFile.Title}}</span> <a href="/attachment/{{.WordFile.Title}}" id="word_download" > <i class="glyphicon glyphicon-download"></i> </a> <i class="glyphicon glyphicon-remove" id="word_delete" name="{{.WordFile.Id}}"></i> </h5>
+
+  </div>  
+  {{end}}
+  <div class="col-md-8 col-md-offset-2">
+
+    <form class="hide" style="margin-bottom:10px;" method="POST" enctype="multipart/form-data"  id="resume_form">
+      <div class="form-group">
+        <div class="input-group">
+          <span class="input-group-addon">选择简历</span>
+          <input type="file" class="form-control" name="attachment" />
+        </div>
+      </div>
+      <a class="btn btn-success" id="btn_add_resume">上传</a>
+    </form>
+
+    {{range .Resumes}}
+    <div class="alert alert-{{.Color}}" id="resume_{{.Id}}">
+      <p class="pull-left">{{.Title}}</p>
+      {{if $isLogin}}
+      <p class="pull-right">
+        <i class="glyphicon glyphicon-edit resume_edit" name="{{.Id}}" ></i>&nbsp;&nbsp;
+        <i class="glyphicon glyphicon-remove resume_remove" name="{{.Id}}"></i>&nbsp;&nbsp;
+        <i class="glyphicon glyphicon-arrow-up resume_up" name="{{.Id}}"></i>&nbsp;&nbsp;
+        <i class="glyphicon glyphicon-arrow-down resume_down" name="{{.Id}}"></i>&nbsp;&nbsp;
+      </p>
+      {{end}}
+      <div class="clearfix"></div>
+          {{str2html .Content}}
+    </div>
+    {{end}}
+  </div>
+</div>
+<div class="FooterPush"></div>
+</div>
+{{template "footer2" .}}
+<script charset="utf-8" src="/static/js/jquery.form.min.js"></script>
+<script>
+  $(function(){
+
+    var orderArr=new Array();
+
+    //排序数组
+    {{range .Resumes}}
+        orderArr.push({{.Id}})
+    {{end}}
+
+    $('i').hover(function() {
+      $(this).css('cursor', 'pointer');
+    }, function() {
+      $(this).css('cursor', 'default');
+    });
+
+    //简历修改
+    $('.resume_edit').click(function(event) {
+       id=$(this).attr('name');
+       location.href="/resume/edit/"+id;
+    });   
+    //删除简历
+    $('.resume_remove').click(function(event) {
+      if(confirm("确认删除吗?")){
+         id=parseInt($(this).attr('name'));
+         idx=$.inArray(id,orderArr);
+         $.get("/resume/del/"+id, function(){
+            $("#resume_"+id).remove();
+            //更新排序数组
+            orderArr.splice(idx,1); //从idx位置删除，删除1个元素
+        });
+      }
+    });    
+
+    //todo:实现比较麻烦，如何反映到数据库
+    //简历上移
+    $('.resume_up').click(function(event) {
+       id=parseInt($(this).attr('name'));
+       idx=$.inArray(id, orderArr);
+       if(0!=idx){
+         $("#resume_"+id).insertBefore("#resume_"+orderArr[idx-1]);
+         //改变顺序
+         var temp=orderArr[idx-1];
+         orderArr[idx-1]=id;
+         orderArr[idx]=temp;
+       }
+    });    
+    //简历下移
+    $('.resume_down').click(function(event) {
+       id=parseInt($(this).attr('name'));
+       idx=$.inArray(id, orderArr);
+       if((orderArr.length-1)!=idx){
+         $("#resume_"+orderArr[idx+1]).insertBefore("#resume_"+id);
+         //改变顺序
+         var temp=orderArr[idx+1];
+         orderArr[idx+1]=id;
+         orderArr[idx]=temp;
+       }
+    });
+    //上传Word文件
+    $('#up_resume').click(function(event) {
+      if($("#resume_form").hasClass('hide')){
+        $("#resume_form").removeClass('hide');
+      }else{
+        $('#resume_form').addClass('hide');
+      }
+    });
+    $('#btn_add_resume').click(function(event) {
+      $('#resume_form').ajaxSubmit({
+              url:'/resume/upWord',
+              dataType:'json',
+              success:function(data){
+                  $('#resume_form')[0].reset();
+                  $('#resume_form').addClass('hide');
+                  $('#up_resume').addClass('hide');
+                  $('#word').removeClass('hide');
+                  $('#word_name').html(data.name);
+                  $('#word_download').attr('href', '/attachment/'+data.name);
+                  $('#word_delete').attr('name', data.id);
+              }
+        });
+    });
+
+    //删除Word简历  登录才能删除
+    $('#word_delete').click(function(event) {
+       var id=parseInt($(this).attr('name'));
+       $.get("/resume/del/"+id, function(){
+          $('#word').addClass('hide');
+          $('#up_resume').removeClass('hide');
+      });
+    });   
+
+  })
+
+</script>
+</html>

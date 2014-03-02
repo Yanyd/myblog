@@ -1,0 +1,242 @@
+<!--引入页头-->
+{{template "header2" .}}
+
+<div class="body_center">
+<!--引入导航条-->
+{{template "navbar" .}}
+
+<div class="container bk_color" style="padding-top:14px;padding-bottom:14px;">
+	<div style="margin-bottom:10px;">
+		<a class="btn btn-primary" id="add_photo">上传图片</a>
+		<a class="btn btn-primary" id="add_album">创建相册</a>
+		<a class="btn btn-primary">管理相册</a>
+	</div>
+	<!--上传图片-->
+	<form method="POST" enctype="multipart/form-data" class="hide" id="photo_form">
+		<div class="form-group" id="upto">
+		  <label >上传到:</label>
+		  {{range .Albums}}
+		  <label class="radio-inline">
+		    <input type="radio"  value="{{.Id}}" name="aid"/>
+		    {{.Name}}
+		  </label>
+		  {{end}}
+		</div>
+		<div class="form-group">
+		  <div class="input-group">
+		    <span class="input-group-addon">选择图片</span>
+		    <input type="file" class="form-control" name="attachment" />
+		  </div>
+		</div>
+		<div class="form-group">
+		  <div class="input-group">
+		    <span class="input-group-addon">图片简述</span>
+		    <input type="text" class="form-control" placeholder="简短说一下这张图的故事。" name="description" maxlength="200" required>
+		  </div>
+		</div>
+		<a class="btn btn-success" id="btn_add_photo">上传</a>
+	</form>
+	<!--创建相册-->
+	<form class="hide" id="album_form">
+		<div class="form-group">
+		  <div class="input-group">
+		    <span class="input-group-addon">相册名称</span>
+		    <input type="text" class="form-control" placeholder="起个什么名称呢。" name="name" maxlength="100" required>
+		  </div>
+		</div>
+		<div class="form-group">
+		  <label>相册描述</label>
+		  <textarea  name="description" cols="30" rows="5" class="form-control" placeholder="说说这个相册的故事吧。" maxlength="5000"  required ></textarea>
+		</div>
+		<a class="btn btn-success" id="btn_add_album">创建</a>
+	</form>
+	<div id="carousel1" class="carousel slide" style="margin-top:10px;">
+		<div class="carousel-inner">
+			<div class="item active">
+				<img src="/static/img/book.jpg" alt="">
+				<div class="carousel-caption">
+					<!-- <h4>标题一</h4>
+					<p>
+						Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh 
+					</p> -->
+				</div>
+			</div>
+
+			<div class="item">
+				<img src="/static/img/wait.jpg" alt="">
+				<div class="carousel-caption">
+				</div>
+			</div>
+
+			<div class="item">
+				<img src="/static/img/create.jpg" alt="">
+				<div class="carousel-caption">
+				</div>
+			</div>		
+
+			<div class="item">
+				<img src="/static/img/stronger.jpg" alt="">
+				<div class="carousel-caption">
+				</div>
+			</div>		
+
+			<div class="item">
+				<img src="/static/img/weed.jpg" alt="">
+				<div class="carousel-caption">
+				</div>
+			</div>
+		</div>
+		<a href="#carousel1" data-slide="prev" class="left carousel-control"><span class="glyphicon glyphicon-chevron-left"></span>
+</a>
+		<a href="#carousel1" data-slide="next" class="right carousel-control"><span class="glyphicon glyphicon-chevron-right"></span>
+</a>
+	</div>
+	<!--新的图片-->
+	<div class="photo_wrap">
+		<ul id="album_list">
+			{{range .Albums}}
+			<li id="album_{{.Id}}">
+				<a href="###"><img class="cover" src="{{.Cover}}" alt=""></a>
+				<div class="caption">
+					<p class="caption_inside pull-left">{{.Name}}　　共 {{.Num}} 张 　　</p>
+					<p class="caption_inside pull-right">{{date .Created "Y-m-d H:i:s"}}</p>
+					<div class="clearfix"></div>
+					<p class="caption_inside">{{.Description}}</p>
+				</div>
+			</li>		
+			{{end}}	
+			<div class="clearfix"></div>
+		</ul>
+	</div>
+</div>
+<!--相册展示模板-->
+<li id="album_clone" class="hide">
+	<a href="###"><img class="cover" src="/static/img/photo/photo_1.jpg" alt=""></a>
+	<div class="caption">
+		<p class="caption_inside pull-left album_name">颜少 共 5 张 </p>
+		<p class="caption_inside pull-right album_created">2014</p>
+		<div class="clearfix"></div>
+		<p class="caption_inside album_description">汝若盛开，清风自来。 </p>
+	</div>
+</li>	
+<label class="radio-inline hide" id="label_clone">
+	<input type="radio"  class="aid" value="" name="aid"/><span class="album_name"></span>
+</label>
+
+<div class="FooterPush"></div>
+</div>
+{{template "footer2" .}}
+<script charset="utf-8" src="/static/js/jquery.form.min.js"></script>
+<script>
+function setPhotoCss(){
+	//设置相册图片效果
+	var thumbnail={
+		imgIncrease:100,
+		effectDuration:400,
+		imgWidth:$('.photo_wrap img:first-child').width(),
+		imgHeight:$('.photo_wrap img:first-child').height()
+	};
+	$('.photo_wrap li').css({
+		'width': thumbnail.imgWidth,
+		'height': thumbnail.imgHeight
+	});
+
+	$('.photo_wrap li').hover(function() {
+		$(this).find('img').stop().animate({
+			width:parseInt(thumbnail.imgWidth)+thumbnail.imgIncrease,
+			left:thumbnail.imgIncrease/2*(-1),
+			top:thumbnail.imgIncrease/2*(-1)
+		}, {
+			'duration':thumbnail.effectDuration,
+			'queue':false
+		});
+		//animated 这个很关键,否则鼠标滑过会重复执行多次
+		//显示
+		$(this).find('.caption:not(:animated)').slideDown(thumbnail.effectDuration);
+	}, function() {
+		$(this).find('img').animate({
+			width:thumbnail.imgWidth,
+			left:0,
+			top:0
+		}, thumbnail.effectDuration);
+		//隐藏
+		$(this).find('.caption').slideUp(thumbnail.effectDuration);
+	});
+}
+	$(function(){
+		$('.carousel').carousel({
+		  interval: 2000
+		});
+		
+		setPhotoCss();
+
+		$("#add_photo").click(function(event) {
+			if($("#photo_form").hasClass('hide')){
+				$("#photo_form").removeClass('hide');
+			}else{
+				$('#photo_form').addClass('hide');
+			}
+			$('#album_form').addClass('hide');
+
+		});		
+		$("#add_album").click(function(event) {
+			if($("#album_form").hasClass('hide')){
+				$("#album_form").removeClass('hide');
+			}else{
+				$('#album_form').addClass('hide');
+			}
+			$('#photo_form').addClass('hide');
+		});
+
+		//创建相册
+		$('#btn_add_album').click(function(event) {
+			var name=$.trim($("input[name=name]").val())
+			var description=$.trim($("textarea[name=description]").val())
+			$.post('/photo/addAlbum',$('#album_form').serialize(), function(data) {
+				var albumObj=eval("("+data+")");
+				var cloneObj=$("#album_clone").clone();
+	            $(cloneObj).prependTo($('#album_list'));
+	            $(cloneObj).attr({ "id": "album_"+albumObj.id});
+	            $("#album_"+albumObj.id+" .cover").attr('src', '/static/img/photo/default.jpg');
+	            $("#album_"+albumObj.id+" .album_name").html(name+"　　共 0 张"+albumObj.created);
+	            $("#album_"+albumObj.id+" .album_created").html(albumObj.created);
+	            $("#album_"+albumObj.id+" .album_description").html(description);
+	            $("#album_"+albumObj.id).removeClass('hide');
+	            $('#album_form')[0].reset();
+	            $('#album_form').addClass('hide');
+
+	            var labelClone=$('#label_clone').clone();
+	            $(labelClone).appendTo('#upto');
+	            $(labelClone).attr({ "id": "any_"+albumObj.id});
+	            $('#any_'+albumObj.id+' .aid').val(albumObj.id);
+	            $('#any_'+albumObj.id+' .album_name').html(name);
+	            $('#any_'+albumObj.id).removeClass('hide');
+	            //设置样式及效果
+	            setPhotoCss();
+			});
+		});
+		//上传图片
+		$('#btn_add_photo').click(function(event) {
+			var aid=$.trim($("input[name=aid]:checked").val())
+			$('#photo_form').ajaxSubmit({
+				url:'/photo/addPhoto',
+				dataType:'json',
+				success:function(data){
+					$('#photo_form')[0].reset();
+					$('#photo_form').addClass('hide');
+
+					//修改相册封面
+					var name=data.name;
+					var imgSrc=$("#album_"+aid+" .cover").attr('src')
+					imgSrc=imgSrc.substring(imgSrc.lastIndexOf('/')+1);
+					if(imgSrc=='default.jpg'){
+						$("#album_"+aid+" .cover").attr('src', '/static/img/photo/'+name);
+					}
+					//设置样式及效果
+					setPhotoCss();
+				}
+			});
+		});
+	})
+</script>
+</html>

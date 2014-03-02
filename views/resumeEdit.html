@@ -1,0 +1,68 @@
+<!--引入页头-->
+{{template "header2" .}}
+
+<div class="body_center">
+<!--引入导航条-->
+{{template "navbar" .}}
+
+<div class="container bk_color" style="padding-top:20px;padding-bottom:20px;">
+  <form method="POST" action="/resume">
+      <input type="hidden" name="rid" value="{{.Resume.Id}}">
+      <div class="form-group">
+        <div class="input-group">
+          <span class="input-group-addon">模块标题</span>
+          <input type="text" class="form-control" value="{{.Resume.Title}}" name="title" maxlength="100"   required >
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label style="margin-right:12px;">背景颜色:</label>
+        <label class="radio-inline">
+          <input type="radio"  value="info" name="color" style="position:relative;top:6px;"/><div class="alert alert-info"></div>
+        </label>
+        <label class="radio-inline">
+          <input type="radio"  value="success" name="color" style="position:relative;top:6px;"/><div class="alert alert-success"></div>
+        </label>
+        <label class="radio-inline">
+          <input type="radio"  value="danger" name="color" style="position:relative;top:6px;"/><div class="alert alert-danger"></div>
+        </label>
+      </div>
+
+    <div class="form-group">
+      <label >简历内容:　　　　　　　　<span class="save_info hidden" style="color:red;font-size:14px;"></span></label>
+      <textarea id="editor_id" name="content" cols="30" rows="15" class="form-control" maxlength="5000"  required >{{.Resume.Content}}</textarea>
+    </div>
+    <input type="submit" class="btn btn-success" value="修改">
+
+  </form>
+</div>
+  <div class="FooterPush"></div>
+</div>
+
+{{template "footer2" .  }}
+{{template "jstool" .   }}
+<!--编辑器配置-->
+<script charset="utf-8" src="/static/kindeditor/kindeditor.js"></script>
+<script charset="utf-8" src="/static/kindeditor/lang/zh_CN.js"></script>
+<script charset="utf-8" src="/static/js/jquery.form.min.js"></script>
+<script>
+/*样式与bootstrap冲突*/
+ KindEditor.ready(function(K) {
+      window.editor = K.create('#editor_id',{
+        allowUpload : true, 
+        urlType : 'absolute',
+        uploadJson : '/findeditor',
+        afterChange:function(){this.sync();},
+        afterFocus:function(){this.sync();},
+        afterBlur: function(){this.sync();}  //将HTML数据设置到原来的textarea
+      });
+});
+ $(function(){
+   $("input[type='radio']").each(function(index, el) {
+     if ($(this).val()=={{.Resume.Color}}){
+        $(this)[0].checked='checked';
+     }
+   });
+ })
+ </script>
+</html>

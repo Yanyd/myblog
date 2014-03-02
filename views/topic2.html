@@ -1,0 +1,251 @@
+<!--引入页头-->
+{{template "header2" .}}
+
+<div class="body_center">
+<!--引入导航条-->
+{{template "navbar" .}}
+<div class="container bk_color" >
+  <div style="padding-top:10px;">
+    
+    <div class="col-md-3">
+        <ul class="nav nav-list" data-spy="affix" data-offset-top="140" id="archive" style="background-color:#fff;">
+          <li id="archive_top"><a href="#one" style="background-color:#fff;"> 博客档案{{if .IsLogin}}
+            <button type="button" class="btn btn-link pull-right" id="topic_manage" style="position:relative;top:-8px;">博客管理</button>{{end}}
+</a></li>
+        </ul>
+     </div>
+     <div class="col-md-9" id="archive_content" style="padding:0 6px;">
+          <!--显示日历的js文件-->     
+          {{template "calendar" .}}
+     </div>
+
+  </div>
+</div>
+  <div class="FooterPush"></div>
+</div>
+<!--文章显示模板-->
+
+<div class="col-sm-4" style="display:none;padding:0 6px;" id="archive_tpl">
+  <div class="thumbnail topic_area"  style="height:200px;position:relative;">
+    <div class="caption">
+      <h4 style="margin:0px;height:20px;overflow:hidden;margin-bottom:2px;"><a style="text-decoration:none;" class="title" >title</a></h4>
+      <p class="topic_label" style="margin:4px 0 0;height:23px;overflow:hidden;">label:</p>
+      <p class="topic_ctg" style="margin-bottom:3px;line-height:16px;">分类:</p>
+      <p class="content" style="margin-top:6px;">content</p>
+      <p style="position:absolute;bottom:2px;" class="banner">
+        <a class="upvote_a"  rel="tooltip" data-placement="bottom" data-original-title="upvote" style="text-decoration:none;cursor:pointer;display:inline-block;position:relative;bottom:-2px;"> <i class="glyphicon glyphicon-thumbs-up"></i></a> <span class="upvote_num"></span> | <span class="created_time"></span> | 浏览: <span class="views_num"></span> | 评论: <a class="reply_a" href="###" style="color:#45b0ee;"><span class="reply_num"></span></a></p>
+    </div>
+  </div>
+</div>
+
+<!---->
+<!--分页  start-->   
+  <ul id="pagination" class="pagination pagination-lg col-sm-12" style="display:none;"></ul>
+      <!--分页 end -->
+<!--分页模板start-->
+  <li style="display:none;" name="pg_tpl"><a href="###"></a></li>
+<!--分页模板end-->
+<!--博客归档时间模板 start-->
+<li class="archive_date" id="archive_date_tpl" style="display:none;"><a href="###" name=""><span class="date_text">123</span><i class="glyphicon glyphicon-chevron-right pull-right"></i></a></li>
+<!--博客归档时间模板 end-->
+
+
+<!--博客归档时间分页 start-->
+  <li id="archive_bottom" style="display:none;">
+    <a href="#one" id="archive_page"> 
+      <span href="#one" id="archive_prev" style="cursor:pointer;"> 上一页 </span> 
+      <span class="pull-right" href="#one" id="archive_next" style="cursor:pointer;"> 下一页 </span>
+    </a>
+  </li> 
+<!--博客归档时间分页 end-->
+
+  {{template "footer2" .}}
+  <!--分页js文件-->
+  {{template "pagination2" .}}
+<script>
+  $(function(){  
+    
+    getArchiveDate("");
+
+    $('#topic_manage').click(function(event) {
+      $(window)[0].location.href="/topic?op=manage";
+    });
+  })
+//处理博客档案时间
+function getArchiveDate(arg){
+     $.post('/topic/archiveDate/'+arg, function(data) {
+        var jsonObj=eval("("+data+")")
+        var times=jsonObj.dates;
+        var pageObj=jsonObj.page
+        $(".todel").empty();
+        $(times).each(function(index, time) {
+            var cloneObj=$("#archive_date_tpl").clone();
+            $(cloneObj).insertAfter("#archive_top");
+            $(cloneObj).attr({ "id": "date_"+index});
+            $("#date_"+index+" a").attr({'name':time.d});
+            $("#date_"+index).addClass('todel');
+            $("#date_"+index+" .date_text").html(time.d);
+            //$(cloneObj).show();
+            $(cloneObj).fadeIn('slow');
+        });
+
+
+        var lis=$('#archive >li');
+        lis.click(function() {
+          lis.removeClass('active');
+          $(this).addClass('active');
+          $("#archive_bottom").removeClass('active');
+          $("#archive_top").removeClass('active');
+
+          if($(this).hasClass('archive_date')){
+            //清除其他li的class(active_now)
+            $("#archive >li[class!='"+$(this).attr('class')+"']").removeClass('active_now');
+
+            if(!$(this).hasClass('active_now')){
+              var date=$(this).children('a').attr('name');
+              date=$.trim(date.replace(' 年 ','-').replace(' 月',''));
+              getTopic(date);
+              $(this).addClass('active_now');
+            }
+          }
+        });
+
+        lis.hover(function() {
+            $(this).children('a').css({'background-color': ''});
+        }, function() {
+            $(this).children('a').css({'background-color': '#fff'});
+        });
+
+        $("#archive i").css({
+          'opacity': '0.25'
+        });
+
+        if(parseInt(pageObj.totalPageNum)>1){
+            $("#archive_bottom").appendTo('#archive');
+            $("#archive_bottom").show();
+
+
+            $("#archive_bottom,#archive_top").hover(function() {
+                $(this).children('a').css({'background-color': '#fff','cursor':'default'});
+            }, function() {
+                $(this).children('a').css({'background-color': '#fff'});
+            });
+
+            if(1==parseInt(pageObj.pageNow)){
+              $("#archive_prev").attr('disabled', 'disabled'); 
+              $("#archive_next").removeAttr('disabled');
+            }else{
+              $("#archive_prev").removeAttr('disabled');
+              $("#archive_prev").unbind('click');//未解除绑定会重复执行多次
+              $("#archive_prev").click(function(event) {
+                $("#archive_prev").css({'color': '#dd4b39'});
+                $("#archive_next").css({'color': ''});
+                 getArchiveDate(parseInt(pageObj.pageNow)-1);
+              }); 
+            }
+            
+            if(parseInt(pageObj.pageNow)==parseInt(pageObj.totalPageNum)){
+              $("#archive_next").attr('disabled', 'disabled'); 
+              $("#archive_prev").removeAttr('disabled');     
+            }else{
+              $("#archive_next").removeAttr('disabled');
+              $("#archive_next").unbind('click');//未解除绑定会重复执行多次
+              $("#archive_next").click(function(event) {
+                $("#archive_prev").css({'color': ''});
+                $("#archive_next").css({'color': '#dd4b39'});
+                 getArchiveDate(parseInt(pageObj.pageNow)+1);
+              });
+            }
+        }
+
+        $("#archive li:last").css({
+          'border-bottom':'1px solid #e5e5e5'
+        }); 
+        
+    });
+}
+
+
+  //发送ajax请求获取博客信息
+  function getTopic(date){
+    $.post("/topic/archive/"+date, function(data){
+          //转成JSON对象
+          var obj=eval("("+data+")");
+          var topics=obj.topics
+          var pageObj=obj.page
+          //先移出来才不会被清空
+          $("#pagination").empty();
+          $("#pagination").insertAfter('#archive_tpl')
+          $("#pagination").hide()
+          $("#archive_content").empty();
+          $(topics).each(function(index, topic) {          
+                var cloneObj=$("#archive_tpl").clone();
+                $(cloneObj).appendTo("#archive_content");
+                $(cloneObj).attr({ "id": "topic_"+topic.id});
+                $("#topic_"+topic.id+" .title").html(topic.title);
+                $("#topic_"+topic.id+" .title").attr({'title':topic.title});
+                $("#topic_"+topic.id+" .title").attr({'href':'/topic/view/'+topic.id});
+                //循环添加标签
+                var labelStr='标签: ';
+                if(topic.label.length>0){
+                    $.each(topic.label.split(","), function(index, val) {
+                       labelStr+='<a href="/?label='+val+'" class="btn btn-info btn-xs">'+val+'</a> '
+                    });  
+                }else{
+                  labelStr+=" 无"
+                }
+                $("#topic_"+topic.id+" .topic_label").html(labelStr);
+                //分类信息 /?id={{.Id}}
+                $("#topic_"+topic.id+" .topic_ctg").html('<span style="position:relative;top:2px;">分类:</span> '+'<a href="/?id='+topic.cid+'" class="btn btn-link btn-xs">'+topic.ctg+'</a>');
+
+                $("#topic_"+topic.id+" .content").html(topic.content+"...");
+                //<!--a链接-->
+                $("#topic_"+topic.id+" .banner .upvote_num").html(topic.upvote);
+                $("#topic_"+topic.id+" .banner .upvote_a").click(function(event) {
+                    upvote(topic.id);
+                });
+                $("#topic_"+topic.id+" .banner .created_time").html(topic.created);
+                $("#topic_"+topic.id+" .banner .views_num").html(topic.views);
+                $("#topic_"+topic.id+" .banner .reply_num").html(topic.replyCount);
+                $("#topic_"+topic.id+" .banner .reply_a").attr('href','/topic/view/'+topic.id+'/#comment');
+                $("#topic_"+topic.id).fadeIn('slow');
+          });
+          //特效
+          $(".topic_area").hover(function() {
+            $(this).css({"background-color": '#C2ECA7','cursor':'default'});
+          }, function() {
+            $(this).css({"background-color": '#fff'});
+          });
+
+          //处理分页start
+          if(parseInt(pageObj.totalPageNum)>1){
+            $("#pagination").appendTo("#archive_content")
+            $("#pagination").show();
+            page({
+               id : 'pagination',
+               nowNum :parseInt(pageObj.pageNow) ,
+               allNum :parseInt(pageObj.totalPageNum),
+               time:date.split('/')[0]
+             });
+            //处理分页点击 todo:不必要的重复点击 比如当前第二页,再点击第二页时就不必发送请求
+            $("#pagination li").click(function() {
+               var url=$(this).attr('name')
+               getTopic(url);
+            });
+          }
+          //分页end
+          
+        });
+  }
+  //使用Ajax进行投票
+  function upvote(id){
+      $.get("/topic/upvote/"+id, function(data){
+          if(data.length>0){
+            //转成JSON对象
+            var upvote=eval("("+data+")"); 
+            $("#topic_"+id+" .banner .upvote_num").html(upvote.num);
+          }
+      });
+  }
+</script>
+</html>

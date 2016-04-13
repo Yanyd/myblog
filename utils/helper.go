@@ -44,7 +44,7 @@ func EmailVerification(email string) bool {
 		beego.Error(err)
 		return false
 	}
-	auth := smtp.PlainAuth("", "yanyuanda@sina.cn", "Ygbada159", "smtp.sina.com")
+	auth := smtp.PlainAuth("", "yanyuanda@sina.cn", "", "smtp.sina.com")
 	err = client.Auth(auth)
 	if nil != err {
 		beego.Error(err)
